@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { Product } from "@/types";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const useProductList = () => {
@@ -50,6 +51,48 @@ export const useInsertProduct = () => {
         throw new Error(error.message);
       }
       return newProduct;
+    },
+    async onSuccess() {
+      await queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+};
+
+export const useUpdateProduct = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    async mutationFn({ id, ...update }: Product) {
+      const { data, error } = await supabase
+        .from("products")
+        .update(update)
+        .eq("id", id)
+        .select();
+
+      if (error) {
+        throw error;
+      }
+      return data;
+    },
+    async onSuccess(_, { id }) {
+      await queryClient.invalidateQueries({ queryKey: ["products"] });
+      await queryClient.invalidateQueries({ queryKey: ["product", id] });
+    },
+    onError(error) {
+      console.log(error);
+    },
+  });
+};
+
+export const useDeleteProduct = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    async mutationFn(id: number) {
+      const { error } = await supabase.from("products").delete().eq("id", id);
+      if (error) {
+        throw new Error(error.message);
+      }
     },
     async onSuccess() {
       await queryClient.invalidateQueries({ queryKey: ["products"] });
