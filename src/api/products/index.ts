@@ -76,7 +76,7 @@ export const useUpdateProduct = () => {
     },
     async onSuccess(_, { id }) {
       await queryClient.invalidateQueries({ queryKey: ["products"] });
-      await queryClient.invalidateQueries({ queryKey: ["product", id] });
+      await queryClient.invalidateQueries({ queryKey: ["products", id] });
     },
     onError(error) {
       console.log(error);

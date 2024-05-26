@@ -1,9 +1,29 @@
-import { View, FlatList } from "react-native";
-import orders from "@assets/data/orders";
-import React from "react";
+import { View, FlatList, ActivityIndicator, Text } from "react-native";
 import OrderListItem from "@/components/OrderListItem";
+import { useAdminOrderList } from "@/api/orders";
+import {
+  useInsertOrderSubscription,
+  useUpdateAllOrderSubscription,
+} from "@/api/orders/subscription";
 
 const OrderScreen = () => {
+  const {
+    data: orders,
+    isLoading,
+    error,
+  } = useAdminOrderList({ archived: false });
+
+  useInsertOrderSubscription();
+  useUpdateAllOrderSubscription();
+
+  if (isLoading) {
+    return <ActivityIndicator style={{ flex: 1 }} />;
+  }
+
+  if (error) {
+    return <Text>Failed to fetch orders</Text>;
+  }
+
   return (
     <View style={{ flex: 1 }}>
       <FlatList

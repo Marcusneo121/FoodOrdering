@@ -12,6 +12,12 @@ import {
   useUpdateProduct,
 } from "@/api/products";
 
+import * as FileSystem from "expo-file-system";
+import { supabase } from "@/lib/supabase";
+import { decode } from "base64-arraybuffer";
+import { randomUUID } from "expo-crypto";
+import RemoteImage from "@/components/RemoteImage";
+
 const CreateProductScreen = () => {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
@@ -19,6 +25,8 @@ const CreateProductScreen = () => {
   const [image, setImage] = useState<string | null>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [isLocalImage, setIsLocalImage] = useState(false);
 
   const { id: idString } = useLocalSearchParams();
   const id = parseFloat(
@@ -74,14 +82,16 @@ const CreateProductScreen = () => {
     setIsSubmitting(false);
   };
 
-  const onCreate = () => {
+  const onCreate = async () => {
     if (!validateInput()) {
       return;
     }
-    // console.warn("Creating product: ", name);
+
+    const imagePath = await uploadImage();
+
     // Save in the database
     insertProduct(
-      { name, price: parseFloat(price), image },
+      { name, price: parseFloat(price), image: imagePath },
       {
         onSuccess: () => {
           resetFields();
@@ -91,12 +101,15 @@ const CreateProductScreen = () => {
     );
   };
 
-  const onUpdate = () => {
+  const onUpdate = async () => {
     if (!validateInput()) {
       return;
     }
+    
+    const imagePath = await uploadImage();
+
     updateProduct(
-      { id, name, price: parseFloat(price), image },
+      { id, name, price: parseFloat(price), image: imagePath },
       {
         onSuccess() {
           resetFields();
@@ -115,7 +128,28 @@ const CreateProductScreen = () => {
     });
 
     if (!result.canceled) {
+      setIsLocalImage(true);
       setImage(result.assets[0].uri);
+    }
+  };
+
+  const uploadImage = async () => {
+    if (!image?.startsWith("file://")) {
+      return;
+    }
+
+    const base64 = await FileSystem.readAsStringAsync(image, {
+      encoding: "base64",
+    });
+    const filePath = `${randomUUID()}.png`;
+    const contentType = "image/png";
+
+    const { data, error } = await supabase.storage
+      .from("product-images")
+      .upload(filePath, decode(base64), { contentType });
+
+    if (data) {
+      return data.path;
     }
   };
 
@@ -123,7 +157,7 @@ const CreateProductScreen = () => {
     deleteProduct(id, {
       onSuccess: () => {
         resetFields();
-        router.replace('/(admin)')
+        router.replace("/(admin)");
       },
     });
   };
@@ -147,10 +181,21 @@ const CreateProductScreen = () => {
         options={{ title: isUpdating ? "Update Product" : "Create Product" }}
       />
 
-      <Image
-        source={{ uri: image || defaultPizzaImage }}
-        style={styles.image}
-      />
+      {isLocalImage ? (
+        <Image
+          source={{ uri: image || defaultPizzaImage }}
+          style={styles.image}
+        />
+      ) : (
+        <RemoteImage
+          // source={{ uri: product.image || defaultPizzaImage }}
+          path={image}
+          fallback={defaultPizzaImage}
+          style={styles.image}
+          resizeMode="contain"
+        />
+      )}
+
       <Text onPress={pickImage} style={styles.textButton}>
         Select Image
       </Text>
