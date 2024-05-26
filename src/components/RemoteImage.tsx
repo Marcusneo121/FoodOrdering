@@ -1,4 +1,4 @@
-import { Image } from "react-native";
+import { Image } from "expo-image";
 import React, { ComponentProps, useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 

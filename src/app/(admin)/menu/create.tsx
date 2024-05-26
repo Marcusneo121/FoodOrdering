@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, TextInput, Image, Alert } from "react-native";
+import { View, Text, StyleSheet, TextInput, Alert } from "react-native";
+import { Image } from "expo-image";
 import React, { useEffect, useState } from "react";
 import Button from "@/components/Button";
 import { defaultPizzaImage } from "@/components/ProductListItem";
