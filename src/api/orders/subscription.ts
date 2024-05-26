@@ -12,7 +12,7 @@ export const useInsertOrderSubscription = () => {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "orders" },
         (payload) => {
-          console.warn(payload);
+          // console.warn(payload);
           queryClient.invalidateQueries({ queryKey: ["orders"] });
         }
       )
