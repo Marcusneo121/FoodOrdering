@@ -27,6 +27,7 @@ export const initialisePaymentSheet = async (amount: number) => {
   const {
     data: { session },
   } = await supabase.auth.getSession();
+
   await initPaymentSheet({
     merchantDisplayName: "Carro Food",
     paymentIntentClientSecret: paymentIntent,
